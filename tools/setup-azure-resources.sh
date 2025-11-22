@@ -157,11 +157,6 @@ if az staticwebapp show --name "$SWA_NAME" --resource-group "$RESOURCE_GROUP" &>
     echo -e "${YELLOW}Static Web App '${SWA_NAME}' already exists${NC}"
     SWA_EXISTS=true
 else
-    # Generate a random password for the Static Web App
-    DEFAULT_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
-    read -p "Enter password for Static Web App [${DEFAULT_PASSWORD}]: " SWA_PASSWORD
-    SWA_PASSWORD=${SWA_PASSWORD:-$DEFAULT_PASSWORD}
-    
     az staticwebapp create \
         --name "$SWA_NAME" \
         --resource-group "$RESOURCE_GROUP" \
@@ -191,9 +186,6 @@ echo -e "\n${GREEN}Resource Details:${NC}"
 echo -e "  Resource Group:     ${RESOURCE_GROUP}"
 echo -e "  Static Web App:     ${SWA_NAME}"
 echo -e "  SWA URL:            ${GREEN}https://${SWA_HOSTNAME}${NC}"
-if [ "$SWA_EXISTS" = false ]; then
-    echo -e "  SWA Password:       ${YELLOW}${SWA_PASSWORD}${NC}"
-fi
 echo -e "  Storage Account:    ${STORAGE_ACCOUNT}"
 
 # Save configuration to file
@@ -209,7 +201,6 @@ STORAGE_ACCOUNT=${STORAGE_ACCOUNT}
 LOCATION=${LOCATION}
 SWA_HOSTNAME=${SWA_HOSTNAME}
 SWA_API_KEY=${SWA_API_KEY}
-SWA_PASSWORD=${SWA_PASSWORD}
 EOF
 
 echo -e "\n${GREEN}Configuration saved to: ${CONFIG_FILE}${NC}"
@@ -229,12 +220,13 @@ fi
 echo -e "\n${GREEN}==================================================${NC}"
 echo -e "${GREEN}Access your Static Web App at:${NC}"
 echo -e "${GREEN}https://${SWA_HOSTNAME}${NC}"
-if [ "$SWA_EXISTS" = false ] && [ -n "$SWA_PASSWORD" ]; then
+if [ "$SWA_EXISTS" = false ]; then
+    # Generate a recommended password
+    RECOMMENDED_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
     SWA_RESOURCE_ID="/subscriptions/${SELECTED_SUB_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Web/staticSites/${SWA_NAME}"
-    echo -e "\n${YELLOW}Selected Password: ${SWA_PASSWORD}${NC}"
     echo -e "\n${YELLOW}To enable password protection, visit:${NC}"
     echo -e "https://portal.azure.com/#@/resource${SWA_RESOURCE_ID}/configurations"
     echo -e "\nThen select 'Protect staging environments only' or 'Protect both staging and production'"
-    echo -e "and set the password: ${YELLOW}${SWA_PASSWORD}${NC}"
+    echo -e "and set a password. Recommended password: ${YELLOW}${RECOMMENDED_PASSWORD}${NC}"
 fi
 echo -e "${GREEN}==================================================${NC}\n"
