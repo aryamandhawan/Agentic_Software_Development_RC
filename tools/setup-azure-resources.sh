@@ -63,8 +63,9 @@ fi
 echo -e "\n${GREEN}=== Checking Azure CLI Authentication ===${NC}"
 if ! az account show &>/dev/null; then
     echo -e "${YELLOW}Not logged in to Azure. Please login...${NC}"
-    # Use AZURE_CORE_ONLY_SHOW_ERRORS to suppress subscription selection during login
-    AZURE_CORE_ONLY_SHOW_ERRORS=true az login
+    # Disable the subscription selector to avoid double prompts
+    az config set core.login_experience_v2=off
+    az login
     
     echo -e "${YELLOW}Logged in successfully${NC}"
 else
