@@ -29,6 +29,9 @@
 - Utilize Redis caching where appropriate
 - Use Azure Table Storage for structured data
 - Use Azure Blob Storage for files/documents
+- **IMPORTANT**: Always use the `STORAGE` environment variable for Azure Storage connection strings (Table Storage and Blob Storage)
+  - Local development: Uses Azurite (configured in `local.settings.json`)
+  - Production: Uses Azure Storage Account (configured as Static Web App environment variable)
 - **IMPORTANT**: Always configure JSON serialization to use camelCase for property names (JavaScript expects camelCase, not PascalCase)
 
 ### Error Handling
@@ -63,5 +66,10 @@
 4. Both frontend and backend validation is required
 5. Keep comments minimal (but use proper JSDoc/XML documentation)
 6. Use Table Storage and Blob Storage - no SQL databases
-7. Implementing NEW backend APIs in C# is a big deal, please confirm you should do it, and clearly describe why it's needed.
-8. You should not use the AzureWebJobsStorage environment variable. Create a new one as this is reserved by Static Web Apps. 
+7. Implementing NEW backend APIs in C# is a big deal, please confirm you should do it, and clearly describe why it's needed
+8. You should not use the AzureWebJobsStorage environment variable. Create a new one as this is reserved by Static Web Apps
+9. Always use the `STORAGE` environment variable for all Azure Storage operations (Table Storage and Blob Storage)
+10. Never commit secrets, connection strings, or the `tools/.azure-config` file to git
+11. All API endpoints should be authenticated by default unless explicitly made public
+12. Use camelCase for JSON properties sent to the frontend (JavaScript convention)
+ 

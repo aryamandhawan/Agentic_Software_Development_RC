@@ -36,7 +36,8 @@
 			"extensions": [
 				"ms-dotnettools.csdevkit",
 				"github.vscode-github-actions",
-				"ms-azuretools.vscode-azurefunctions"
+				"ms-azuretools.vscode-azurefunctions",
+				"Azurite.azurite"
 			]
 		}
 	}

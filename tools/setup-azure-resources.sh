@@ -63,7 +63,10 @@ fi
 echo -e "\n${GREEN}=== Checking Azure CLI Authentication ===${NC}"
 if ! az account show &>/dev/null; then
     echo -e "${YELLOW}Not logged in to Azure. Please login...${NC}"
-    az login --only-show-errors
+    # Use AZURE_CORE_ONLY_SHOW_ERRORS to suppress subscription selection during login
+    AZURE_CORE_ONLY_SHOW_ERRORS=true az login
+    
+    echo -e "${YELLOW}Logged in successfully${NC}"
 else
     echo -e "${GREEN}Already authenticated to Azure${NC}"
 fi
@@ -119,7 +122,7 @@ echo -e "${GREEN}=== Creating Resource Group ===${NC}"
 if az group show --name "$RESOURCE_GROUP" &>/dev/null; then
     echo -e "${YELLOW}Resource group '${RESOURCE_GROUP}' already exists${NC}"
 else
-    az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+    az group create --name "$RESOURCE_GROUP" --location "$LOCATION" -o none
     echo -e "${GREEN}✓ Resource group created${NC}"
 fi
 
@@ -133,7 +136,8 @@ else
         --location "$LOCATION" \
         --sku Standard_LRS \
         --kind StorageV2 \
-        --allow-blob-public-access false
+        --allow-blob-public-access false \
+        -o none
     echo -e "${GREEN}✓ Storage account created${NC}"
     
     # Wait for storage account to be fully provisioned
@@ -161,7 +165,8 @@ else
         --name "$SWA_NAME" \
         --resource-group "$RESOURCE_GROUP" \
         --location "$LOCATION" \
-        --sku Standard
+        --sku Standard \
+        -o none
     
     echo -e "${GREEN}✓ Static Web App created${NC}"
     SWA_EXISTS=false
@@ -176,7 +181,8 @@ echo -e "\n${GREEN}=== Configuring Static Web App Environment Variables ===${NC}
 az staticwebapp appsettings set \
     --name "$SWA_NAME" \
     --resource-group "$RESOURCE_GROUP" \
-    --setting-names STORAGE="$STORAGE_CONNECTION_STRING"
+    --setting-names STORAGE="$STORAGE_CONNECTION_STRING" \
+    -o none
 echo -e "${GREEN}✓ Environment variable 'STORAGE' configured${NC}"
 
 echo -e "\n${GREEN}=== Resource Creation Complete ===${NC}"
@@ -209,7 +215,7 @@ echo -e "\n${GREEN}Configuration saved to: ${CONFIG_FILE}${NC}"
 
 # GitHub Secret Setup Instructions
 if git remote get-url origin &> /dev/null; then
-    REPO_PATH=$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')
+    REPO_PATH=$(git remote get-url origin | sed 's/.*github\.com[:/]\(.*\)\(\.git\)\?$/\1/' | sed 's/\.git$//')
     echo -e "\n${GREEN}=== GitHub Secret Setup ===${NC}"
     echo -e "To enable GitHub Actions deployment, add the following secret:"
     echo -e "\n${YELLOW}Secret Name:${NC} AZURE_STATIC_WEB_APPS_API_TOKEN"
