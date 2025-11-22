@@ -6,7 +6,8 @@
       "apiLocation": "api",
       "outputLocation": ".",
       "apiLanguage": "dotnetisolated",
-      "apiVersion": "8.0"
+      "apiVersion": "8.0",
+      "run": "azurite --silent --location .azurite --debug .azurite/debug.log"
     }
   }
 }
