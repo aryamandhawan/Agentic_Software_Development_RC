@@ -7,7 +7,8 @@
       "outputLocation": ".",
       "apiLanguage": "dotnetisolated",
       "apiVersion": "8.0",
-      "run": "azurite --silent --location .azurite --debug .azurite/debug.log"
+      "run": "azurite --silent --location .azurite --debug .azurite/debug.log",
+      "apiDevserverTimeout": 60000
     }
   }
 }
