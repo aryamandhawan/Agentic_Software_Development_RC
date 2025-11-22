@@ -63,7 +63,9 @@ fi
 echo -e "\n${GREEN}=== Checking Azure CLI Authentication ===${NC}"
 if ! az account show &>/dev/null; then
     echo -e "${YELLOW}Not logged in to Azure. Please login...${NC}"
-    az login
+    az login --only-show-errors
+else
+    echo -e "${GREEN}Already authenticated to Azure${NC}"
 fi
 
 # Get list of subscriptions
@@ -133,6 +135,10 @@ else
         --kind StorageV2 \
         --allow-blob-public-access false
     echo -e "${GREEN}✓ Storage account created${NC}"
+    
+    # Wait for storage account to be fully provisioned
+    echo -e "${YELLOW}Waiting for storage account to be fully provisioned...${NC}"
+    sleep 15
 fi
 
 # Get storage account connection string
@@ -144,35 +150,44 @@ STORAGE_CONNECTION_STRING=$(az storage account show-connection-string \
 echo -e "\n${GREEN}=== Creating Static Web App ===${NC}"
 if az staticwebapp show --name "$SWA_NAME" --resource-group "$RESOURCE_GROUP" &>/dev/null; then
     echo -e "${YELLOW}Static Web App '${SWA_NAME}' already exists${NC}"
+    SWA_EXISTS=true
 else
+    # Generate a random password for the Static Web App
+    DEFAULT_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
+    read -p "Enter password for Static Web App [${DEFAULT_PASSWORD}]: " SWA_PASSWORD
+    SWA_PASSWORD=${SWA_PASSWORD:-$DEFAULT_PASSWORD}
+    
     az staticwebapp create \
         --name "$SWA_NAME" \
         --resource-group "$RESOURCE_GROUP" \
-        --location "$LOCATION"
+        --location "$LOCATION" \
+        --sku Standard
+    
     echo -e "${GREEN}✓ Static Web App created${NC}"
+    SWA_EXISTS=false
 fi
 
 # Get Static Web App details
 SWA_HOSTNAME=$(az staticwebapp show --name "$SWA_NAME" --resource-group "$RESOURCE_GROUP" --query "defaultHostname" -o tsv)
 SWA_API_KEY=$(az staticwebapp secrets list --name "$SWA_NAME" --resource-group "$RESOURCE_GROUP" --query "properties.apiKey" -o tsv)
 
+# Set Storage connection string as environment variable on Static Web App
+echo -e "\n${GREEN}=== Configuring Static Web App Environment Variables ===${NC}"
+az staticwebapp appsettings set \
+    --name "$SWA_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --setting-names STORAGE="$STORAGE_CONNECTION_STRING"
+echo -e "${GREEN}✓ Environment variable 'STORAGE' configured${NC}"
+
 echo -e "\n${GREEN}=== Resource Creation Complete ===${NC}"
 echo -e "\n${GREEN}Resource Details:${NC}"
 echo -e "  Resource Group:     ${RESOURCE_GROUP}"
 echo -e "  Static Web App:     ${SWA_NAME}"
-echo -e "  SWA URL:            https://${SWA_HOSTNAME}"
+echo -e "  SWA URL:            ${GREEN}https://${SWA_HOSTNAME}${NC}"
+if [ "$SWA_EXISTS" = false ]; then
+    echo -e "  SWA Password:       ${YELLOW}${SWA_PASSWORD}${NC}"
+fi
 echo -e "  Storage Account:    ${STORAGE_ACCOUNT}"
-
-echo -e "\n${GREEN}=== Next Steps ===${NC}"
-echo -e "1. Add the following to your local.settings.json:"
-echo -e "   ${YELLOW}\"StorageConnectionString\": \"${STORAGE_CONNECTION_STRING}\"${NC}"
-echo -e "\n2. Deploy your application:"
-echo -e "   ${YELLOW}swa deploy --deployment-token \"${SWA_API_KEY}\"${NC}"
-echo -e "\n3. Add GitHub Secret for automated deployments:"
-echo -e "   Secret Name: ${YELLOW}AZURE_STATIC_WEB_APPS_API_TOKEN${NC}"
-echo -e "   Secret Value: ${YELLOW}${SWA_API_KEY}${NC}"
-echo -e "\n   Using GitHub CLI:"
-echo -e "   ${YELLOW}gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body \"${SWA_API_KEY}\"${NC}"
 
 # Save configuration to file
 CONFIG_FILE="tools/.azure-config"
@@ -187,22 +202,32 @@ STORAGE_ACCOUNT=${STORAGE_ACCOUNT}
 LOCATION=${LOCATION}
 SWA_HOSTNAME=${SWA_HOSTNAME}
 SWA_API_KEY=${SWA_API_KEY}
+SWA_PASSWORD=${SWA_PASSWORD}
 EOF
 
 echo -e "\n${GREEN}Configuration saved to: ${CONFIG_FILE}${NC}"
 
-# Offer to set GitHub secret automatically if gh CLI is available and repo is detected
-if command -v gh &> /dev/null && git remote get-url origin &> /dev/null; then
+# GitHub Secret Setup Instructions
+if git remote get-url origin &> /dev/null; then
+    REPO_PATH=$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')
     echo -e "\n${GREEN}=== GitHub Secret Setup ===${NC}"
-    read -p "Would you like to automatically set the GitHub secret now? (y/n): " SET_SECRET
-    if [[ $SET_SECRET =~ ^[Yy]$ ]]; then
-        if gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body "$SWA_API_KEY"; then
-            echo -e "${GREEN}✓ GitHub secret AZURE_STATIC_WEB_APPS_API_TOKEN has been set${NC}"
-            echo -e "${GREEN}✓ GitHub Actions workflow is now ready to deploy${NC}"
-        else
-            echo -e "${YELLOW}Failed to set GitHub secret. You can set it manually using the command above.${NC}"
-        fi
-    else
-        echo -e "${YELLOW}Skipped GitHub secret setup. You can set it later using the command above.${NC}"
-    fi
+    echo -e "To enable GitHub Actions deployment, add the following secret:"
+    echo -e "\n${YELLOW}Secret Name:${NC} AZURE_STATIC_WEB_APPS_API_TOKEN"
+    echo -e "${YELLOW}Secret Value:${NC} ${SWA_API_KEY}"
+    echo -e "\n${YELLOW}Set it here:${NC}"
+    echo -e "https://github.com/${REPO_PATH}/settings/secrets/actions/new"
 fi
+
+# Display final summary with URL at the very end
+echo -e "\n${GREEN}==================================================${NC}"
+echo -e "${GREEN}Access your Static Web App at:${NC}"
+echo -e "${GREEN}https://${SWA_HOSTNAME}${NC}"
+if [ "$SWA_EXISTS" = false ] && [ -n "$SWA_PASSWORD" ]; then
+    SWA_RESOURCE_ID="/subscriptions/${SELECTED_SUB_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Web/staticSites/${SWA_NAME}"
+    echo -e "\n${YELLOW}Selected Password: ${SWA_PASSWORD}${NC}"
+    echo -e "\n${YELLOW}To enable password protection, visit:${NC}"
+    echo -e "https://portal.azure.com/#@/resource${SWA_RESOURCE_ID}/passwordProtection"
+    echo -e "\nThen select 'Protect staging environments only' or 'Protect both staging and production'"
+    echo -e "and set the password: ${YELLOW}${SWA_PASSWORD}${NC}"
+fi
+echo -e "${GREEN}==================================================${NC}\n"
