@@ -7,7 +7,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-API_DIR="$SCRIPT_DIR/../api"
+WORKSPACE_DIR="$SCRIPT_DIR/.."
+API_DIR="$WORKSPACE_DIR/api"
 LOCAL_SETTINGS_FILE="$API_DIR/local.settings.json"
 
 # Colors for output
@@ -16,6 +17,15 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo -e "${GREEN}=== Initializing local.settings.json ===${NC}"
+
+# Rename .sln file to match workspace name (first run only)
+WORKSPACE_NAME=$(basename "$WORKSPACE_DIR")
+EXISTING_SLN=$(find "$WORKSPACE_DIR" -maxdepth 1 -name "*.sln" -type f | head -n 1)
+if [ -n "$EXISTING_SLN" ] && [ "$(basename "$EXISTING_SLN")" != "${WORKSPACE_NAME}.sln" ]; then
+    NEW_SLN="$WORKSPACE_DIR/${WORKSPACE_NAME}.sln"
+    mv "$EXISTING_SLN" "$NEW_SLN"
+    echo -e "${GREEN}✓ Renamed solution file to ${WORKSPACE_NAME}.sln${NC}"
+fi
 
 # Check if local.settings.json already exists
 if [ -f "$LOCAL_SETTINGS_FILE" ]; then
