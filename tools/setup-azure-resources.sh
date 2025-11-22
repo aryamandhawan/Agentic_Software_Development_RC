@@ -168,7 +168,11 @@ echo -e "1. Add the following to your local.settings.json:"
 echo -e "   ${YELLOW}\"StorageConnectionString\": \"${STORAGE_CONNECTION_STRING}\"${NC}"
 echo -e "\n2. Deploy your application:"
 echo -e "   ${YELLOW}swa deploy --deployment-token \"${SWA_API_KEY}\"${NC}"
-echo -e "\n3. Or configure GitHub Actions for CI/CD with the deployment token above"
+echo -e "\n3. Add GitHub Secret for automated deployments:"
+echo -e "   Secret Name: ${YELLOW}AZURE_STATIC_WEB_APPS_API_TOKEN${NC}"
+echo -e "   Secret Value: ${YELLOW}${SWA_API_KEY}${NC}"
+echo -e "\n   Using GitHub CLI:"
+echo -e "   ${YELLOW}gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body \"${SWA_API_KEY}\"${NC}"
 
 # Save configuration to file
 CONFIG_FILE="tools/.azure-config"
@@ -182,6 +186,23 @@ SWA_NAME=${SWA_NAME}
 STORAGE_ACCOUNT=${STORAGE_ACCOUNT}
 LOCATION=${LOCATION}
 SWA_HOSTNAME=${SWA_HOSTNAME}
+SWA_API_KEY=${SWA_API_KEY}
 EOF
 
 echo -e "\n${GREEN}Configuration saved to: ${CONFIG_FILE}${NC}"
+
+# Offer to set GitHub secret automatically if gh CLI is available and repo is detected
+if command -v gh &> /dev/null && git remote get-url origin &> /dev/null; then
+    echo -e "\n${GREEN}=== GitHub Secret Setup ===${NC}"
+    read -p "Would you like to automatically set the GitHub secret now? (y/n): " SET_SECRET
+    if [[ $SET_SECRET =~ ^[Yy]$ ]]; then
+        if gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body "$SWA_API_KEY"; then
+            echo -e "${GREEN}✓ GitHub secret AZURE_STATIC_WEB_APPS_API_TOKEN has been set${NC}"
+            echo -e "${GREEN}✓ GitHub Actions workflow is now ready to deploy${NC}"
+        else
+            echo -e "${YELLOW}Failed to set GitHub secret. You can set it manually using the command above.${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Skipped GitHub secret setup. You can set it later using the command above.${NC}"
+    fi
+fi

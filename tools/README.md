@@ -4,6 +4,27 @@ This folder contains scripts for setting up and managing Azure resources for the
 
 ## Scripts
 
+### init-local-settings.sh
+
+Creates a default `api/local.settings.json` file with Azurite configuration for local development.
+
+**What it does:**
+- Checks if `local.settings.json` already exists
+- If not, creates it with Azurite (local storage emulator) connection strings
+- Safe to run multiple times - won't overwrite existing files
+
+**Usage:**
+```bash
+./tools/init-local-settings.sh
+```
+
+**Note:** This script runs automatically during dev container creation via `postCreateCommand`.
+
+**Configuration created:**
+- `AzureWebJobsStorage`: Uses Azurite local emulator
+- `StorageConnectionString`: Uses Azurite local emulator
+- `FUNCTIONS_WORKER_RUNTIME`: Set to `dotnet-isolated`
+
 ### setup-azure-resources.sh
 
 Interactive script that creates Azure resources using Azure CLI.
