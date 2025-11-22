@@ -232,7 +232,7 @@ if [ "$SWA_EXISTS" = false ] && [ -n "$SWA_PASSWORD" ]; then
     SWA_RESOURCE_ID="/subscriptions/${SELECTED_SUB_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Web/staticSites/${SWA_NAME}"
     echo -e "\n${YELLOW}Selected Password: ${SWA_PASSWORD}${NC}"
     echo -e "\n${YELLOW}To enable password protection, visit:${NC}"
-    echo -e "https://portal.azure.com/#@/resource${SWA_RESOURCE_ID}/passwordProtection"
+    echo -e "https://portal.azure.com/#@/resource${SWA_RESOURCE_ID}/configurations"
     echo -e "\nThen select 'Protect staging environments only' or 'Protect both staging and production'"
     echo -e "and set the password: ${YELLOW}${SWA_PASSWORD}${NC}"
 fi
