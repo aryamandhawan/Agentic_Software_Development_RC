@@ -191,7 +191,40 @@ Interactive script to provision all Azure resources.
 - Static Web App name (default: `{project-name}-swa`)
 - Storage Account name (default: sanitized project name)
 - Azure location (default: `westeurope`)
-- Static Web App password (default: random 16 characters)
+
+### `switch-to-byo-functions.sh`
+Advanced script to migrate from managed functions to a dedicated Azure Function App with Flex Consumption plan.
+
+**When to use:**
+- You need more control over Function App configuration
+- You want Managed Identity for secure storage access
+- You need to scale API independently from frontend
+- You want Flex Consumption plan features
+
+**What it does:**
+1. Creates a dedicated Azure Function App (Flex Consumption, .NET 8)
+2. Sets up System Assigned Managed Identity
+3. Configures storage access via Managed Identity (no connection strings)
+4. Copies environment variables from Static Web App
+5. Switches GitHub Actions to separate frontend/API workflows
+6. Provides publish profile for deployment
+
+**Required steps after running:**
+1. Add `AZURE_FUNCTIONAPP_PUBLISH_PROFILE` secret to GitHub
+2. Wait for frontend deployment (removes managed functions)
+3. Link Function App in Azure Portal
+4. Deploy API via GitHub Actions
+
+**Usage:**
+```bash
+./tools/switch-to-byo-functions.sh
+```
+
+**Architecture:**
+- **Before**: Static Web App with managed functions (limited control)
+- **After**: Static Web App + dedicated Function App (full control, Managed Identity)
+
+See `tools/README.md` for detailed documentation.
 
 ### `init-local-settings.sh`
 Automatically creates `api/local.settings.json` with Azurite configuration if it doesn't exist. Runs on container creation.
