@@ -256,13 +256,27 @@ fi
 
 # Configure the Function App to use Managed Identity for storage
 echo -e "\n${GREEN}=== Configuring Function App to use Managed Identity ===${NC}"
+
+# For Managed Identity, we need to set the credential type and all service URIs
+# Reference: https://learn.microsoft.com/en-us/azure/azure-functions/functions-identity-based-connections-tutorial
 az functionapp config appsettings set \
     --name "$FUNCTION_APP_NAME" \
     --resource-group "$RESOURCE_GROUP" \
-    --settings "AzureWebJobsStorage__accountName=${FUNCTION_STORAGE_ACCOUNT}" \
+    --settings \
+        "AzureWebJobsStorage__accountName=${FUNCTION_STORAGE_ACCOUNT}" \
+        "AzureWebJobsStorage__credential=managedidentity" \
+        "AzureWebJobsStorage__blobServiceUri=https://${FUNCTION_STORAGE_ACCOUNT}.blob.core.windows.net" \
+        "AzureWebJobsStorage__queueServiceUri=https://${FUNCTION_STORAGE_ACCOUNT}.queue.core.windows.net" \
+        "AzureWebJobsStorage__tableServiceUri=https://${FUNCTION_STORAGE_ACCOUNT}.table.core.windows.net" \
     -o none
 
 echo -e "${GREEN}✓ Function App configured to use Managed Identity for storage${NC}"
+echo -e "  ${YELLOW}Settings configured:${NC}"
+echo -e "    AzureWebJobsStorage__accountName=${FUNCTION_STORAGE_ACCOUNT}"
+echo -e "    AzureWebJobsStorage__credential=managedidentity"
+echo -e "    AzureWebJobsStorage__blobServiceUri=https://${FUNCTION_STORAGE_ACCOUNT}.blob.core.windows.net"
+echo -e "    AzureWebJobsStorage__queueServiceUri=https://${FUNCTION_STORAGE_ACCOUNT}.queue.core.windows.net"
+echo -e "    AzureWebJobsStorage__tableServiceUri=https://${FUNCTION_STORAGE_ACCOUNT}.table.core.windows.net"
 
 # Get Function App details
 echo -e "\n${GREEN}=== Retrieving Function App Details ===${NC}"
