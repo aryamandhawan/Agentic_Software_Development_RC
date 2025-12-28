@@ -67,6 +67,82 @@ The repository includes a complete dev container configuration with all required
 2. Clone the repository
 3. Open in VS Code and click "Reopen in Container"
 
+## Dev Container Configurations
+
+The repository includes two dev container configurations to suit different development needs:
+
+### Default Configuration (`.devcontainer/devcontainer.json`)
+
+The default configuration is optimized for standard development workflows. It uses the official Microsoft .NET 8 dev container image with additional features installed.
+
+**Included Tools:**
+- .NET 8 SDK
+- Node.js 22
+- Azure CLI (with Bicep)
+- GitHub CLI
+- Azure Functions Core Tools
+- Azure Developer CLI (azd)
+- TailwindCSS CLI
+- Azure Static Web Apps CLI
+- Azurite (local storage emulator)
+
+**VS Code Extensions:**
+- C# Dev Kit
+- GitHub Actions
+- Azure Functions
+- Azurite
+
+**Use this configuration when:**
+- Building and testing the application locally
+- Standard development and debugging
+- CI/CD pipeline work
+- You don't need browser automation or MCP tools
+
+### Browser MCP Configuration (`.devcontainer/browser/`)
+
+The browser configuration extends the default setup with a full browser automation environment, ideal for AI agents that need to interact with web pages via the Chrome DevTools Protocol (CDP).
+
+**Additional Components:**
+- Chromium browser with CDP enabled
+- Xvfb (virtual framebuffer for headless display)
+- Fluxbox window manager
+- x11vnc server for VNC access
+- noVNC for web-based VNC access
+- Redis server
+- LibreOffice (Writer, Calc, Impress)
+- PDF utilities (poppler-utils)
+
+**Forwarded Ports:**
+| Port | Service | Description |
+|------|---------|-------------|
+| 4187 | SWA Emulator | Static Web Apps local development |
+| 5900 | VNC | Direct VNC connection to virtual display |
+| 6080 | noVNC | Web-based VNC viewer (access in browser) |
+| 9222 | CDP | Chrome DevTools Protocol endpoint |
+
+**Environment Variables:**
+- `DISPLAY=:99` - Virtual display
+- `SCREEN_WIDTH=1920` / `SCREEN_HEIGHT=1080` - Screen dimensions
+- `CDP_PORT=9222` - Chrome DevTools Protocol port
+- `VNC_PORT=5900` / `NOVNC_PORT=6080` - VNC ports
+
+**Use this configuration when:**
+- Working with AI agents that need browser automation
+- Using MCP (Model Context Protocol) tools for web interaction
+- Testing web scraping or automated UI testing
+- You need visual access to a browser via VNC
+- PDF processing or document conversion is required
+
+**Selecting the Browser Configuration:**
+1. In VS Code, open the Command Palette (Ctrl/Cmd + Shift + P)
+2. Run "Dev Containers: Rebuild and Reopen in Container"
+3. Select "Browser MCP" from the configuration list
+
+**Accessing the Browser:**
+- **noVNC (web)**: Navigate to `http://localhost:6080/vnc.html` in your browser
+- **VNC client**: Connect to `localhost:5900` with any VNC client
+- **CDP**: Use `http://localhost:9222` for Chrome DevTools Protocol connections
+
 ### 2. Set Up Azure Resources
 
 Run the automated setup script to create all necessary Azure resources:

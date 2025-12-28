@@ -76,6 +76,62 @@
       "command": "host start",
       "isBackground": true,
       "problemMatcher": "$func-dotnet-watch"
+    },
+    {
+      "label": "swa start",
+      "type": "shell",
+      "command": "swa",
+      "args": [
+        "start",
+        "agentic-software-development"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "swa",
+        "pattern": {
+          "regexp": "^(.*)$",
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Azure Static Web Apps.*$",
+          "endsPattern": "^.*Azure Static Web Apps emulator started.*$"
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true,
+        "close": true
+      }
+    },
+    {
+      "label": "swa stop",
+      "type": "shell",
+      "command": "pkill -f 'swa start' || true",
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "close": true
+      }
+    },
+    {
+      "label": "swa restart",
+      "type": "shell",
+      "command": "echo 'Restarting SWA...'",
+      "dependsOn": ["swa stop", "swa start"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "close": true
+      }
     }
   ]
 }
