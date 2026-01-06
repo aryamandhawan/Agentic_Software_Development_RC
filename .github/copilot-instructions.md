@@ -72,4 +72,6 @@
 10. Never commit secrets, connection strings, or the `tools/.azure-config` file to git
 11. All API endpoints should be authenticated by default unless explicitly made public
 12. Use camelCase for JSON properties sent to the frontend (JavaScript convention)
+13. **ALWAYS** use the VS Code tasks to interact with Static Web Apps (e.g., "swa start", "swa stop", "swa restart") - these tasks also manage Azurite for local storage emulation
+14. **NEVER** call APIs through the SWA server during development as they require authentication - always call the Azure Functions URL directly (typically `http://localhost:7071/api/...`)
  
