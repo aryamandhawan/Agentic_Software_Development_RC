@@ -61,17 +61,53 @@
 
 ## Key Reminders
 1. This is vanilla JavaScript - no React, Vue, or other frameworks
-2. Always use relative URLs for API calls due to Azure Static Web Apps proxy
+2. Always use relative URLs for API calls in JavaScript code (e.g., `/api/users` not `https://domain.com/api/users`) - SWA proxies these to Functions
 3. Fail fast - don't over-engineer error handling
 4. Both frontend and backend validation is required
 5. Keep comments minimal (but use proper JSDoc/XML documentation)
 6. Use Table Storage and Blob Storage - no SQL databases
 7. Implementing NEW backend APIs in C# is a big deal, please confirm you should do it, and clearly describe why it's needed
-8. You should not use the AzureWebJobsStorage environment variable. Create a new one as this is reserved by Static Web Apps
-9. Always use the `STORAGE` environment variable for all Azure Storage operations (Table Storage and Blob Storage)
-10. Never commit secrets, connection strings, or the `tools/.azure-config` file to git
-11. All API endpoints should be authenticated by default unless explicitly made public
-12. Use camelCase for JSON properties sent to the frontend (JavaScript convention)
-13. **ALWAYS** use the VS Code tasks to interact with Static Web Apps (e.g., "swa start", "swa stop", "swa restart") - these tasks also manage Azurite for local storage emulation
-14. **NEVER** call APIs through the SWA server during development as they require authentication - always call the Azure Functions URL directly (typically `http://localhost:7071/api/...`)
+8. Always use the `STORAGE` environment variable for all Azure Storage operations (Table Storage and Blob Storage). Do NOT use `AzureWebJobsStorage` as this is reserved by Static Web Apps
+9. Never commit secrets, connection strings, or the `tools/.azure-config` file to git
+10. All API endpoints should be authenticated by default unless explicitly made public
+11. Use camelCase for JSON properties sent to the frontend (JavaScript convention)
+12. **Testing APIs locally**: Call the Azure Functions URL directly (`http://localhost:7071/api/...`), NOT through the SWA server (`http://localhost:4280/api/...`) which requires authentication. Use terminal tools like `curl`, or if Chrome MCP is available, test through the browser
+
+---
+
+## ⚠️ CRITICAL: Local Development with SWA CLI and Azurite
+
+### ALWAYS Use VS Code Tasks for SWA
+**NEVER run `swa start`, `swa stop`, or Azurite commands directly in the terminal.**
+
+Instead, use the VS Code tasks:
+- **"swa start"** - Starts SWA CLI and Azurite together
+- **"swa stop"** - Stops SWA CLI gracefully
+- **"swa restart"** - Stops then starts SWA
+
+These tasks are configured to properly manage Azurite alongside SWA.
+
+### Azurite Configuration
+Azurite is configured in `swa-cli.config.json` to run automatically when SWA starts:
+```
+"run": "azurite --silent --location .azurite --debug .azurite/debug.log"
+```
+
+**Local Azurite Endpoints:**
+- Blob Storage: `http://127.0.0.1:10000/devstoreaccount1`
+- Queue Storage: `http://127.0.0.1:10001/devstoreaccount1`
+- Table Storage: `http://127.0.0.1:10002/devstoreaccount1`
+
+**Connection String (in `local.settings.json`):**
+```
+STORAGE=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;
+```
+
+### ⚠️ Known Issue: Port Killing Can Crash Dev Container
+When Azurite is not running and SWA CLI attempts to recover, it may try to kill processes on various ports. **This can inadvertently kill the VS Code Server running inside the dev container**, causing the entire container session to disconnect.
+
+**To avoid this:**
+1. Always use the VS Code tasks (not manual terminal commands)
+2. If SWA is behaving unexpectedly, use "swa stop" first, wait a moment, then use "swa start"
+3. If the container disconnects, simply reconnect - but be aware this was likely caused by aggressive port cleanup
  
