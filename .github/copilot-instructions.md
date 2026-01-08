@@ -49,6 +49,23 @@
 - API calls are proxied - always use relative URLs
 - Backend API is automatically deployed and linked
 
+## ⚠️ Security and Authentication
+
+**CAUTION: Do NOT implement custom security or authentication mechanisms.**
+
+Azure Static Web Apps provides built-in authentication via `/.auth/` endpoints. Always use this instead of rolling your own:
+- Login: `/.auth/login/aad` (Azure AD)
+- User info: `/.auth/me`
+- Logout: `/.auth/logout`
+
+The `staticwebapp.config.json` file controls route-level authentication requirements.
+
+**If you absolutely must implement custom authentication logic:**
+- **DO NOT use the `Authorization` header** - Azure Static Web Apps does not support custom Authorization headers on API requests. The platform strips or ignores them.
+- Use cookies or custom headers with different names (e.g., `X-Custom-Token`)
+- Store tokens in `localStorage` or `sessionStorage` and pass via request body or query parameters
+- Consider if you really need this - the built-in auth is secure and well-tested
+
 ## File Organization
 - No specific naming conventions required
 - Keep structure simple and logical

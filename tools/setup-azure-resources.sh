@@ -221,8 +221,9 @@ echo -e "\n${GREEN}==================================================${NC}"
 echo -e "${GREEN}Access your Static Web App at:${NC}"
 echo -e "${GREEN}https://${SWA_HOSTNAME}${NC}"
 if [ "$SWA_EXISTS" = false ]; then
-    # Generate a recommended password
-    RECOMMENDED_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
+    # Generate a recommended password (with symbol and number)
+    BASE_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-14)
+    RECOMMENDED_PASSWORD="${BASE_PASSWORD}#1"
     SWA_RESOURCE_ID="/subscriptions/${SELECTED_SUB_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Web/staticSites/${SWA_NAME}"
     echo -e "\n${YELLOW}To enable password protection, visit:${NC}"
     echo -e "https://portal.azure.com/#@/resource${SWA_RESOURCE_ID}/configurations"

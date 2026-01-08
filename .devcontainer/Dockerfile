@@ -24,6 +24,9 @@ RUN apt-get install -y redis-server
 # Install poppler-utils for PDF text extraction (pdftotext, pdfinfo, pdfimages)
 RUN apt-get install -y poppler-utils
 
+# Install jq for JSON processing (useful for Azure CLI and API responses)
+RUN apt-get install -y jq
+
 # Install TailwindCSS standalone CLI
 RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
     && chmod +x tailwindcss-linux-x64 \

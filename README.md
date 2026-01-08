@@ -32,6 +32,12 @@ This template provides a complete starting point for building AI-powered agentic
 │   ├── setup-azure-resources.sh # Azure resource provisioning
 │   └── init-local-settings.sh   # Local settings initialization
 ├── .devcontainer/               # Dev container configuration
+│   ├── devcontainer.json        # Default (Browser MCP) config
+│   ├── Dockerfile               # Custom container with browser tools
+│   ├── post-start.sh            # Container startup script
+│   ├── start-browser.sh         # Browser automation startup
+│   └── 1/                       # Lightweight config (archived)
+│       └── devcontainer.json
 ├── .github/workflows/           # GitHub Actions CI/CD
 └── staticwebapp.config.json    # Static Web App configuration
 
@@ -71,9 +77,68 @@ The repository includes a complete dev container configuration with all required
 
 The repository includes two dev container configurations to suit different development needs:
 
-### Default Configuration (`.devcontainer/devcontainer.json`)
+### Default Configuration - Browser MCP (`.devcontainer/devcontainer.json`)
 
-The default configuration is optimized for standard development workflows. It uses the official Microsoft .NET 8 dev container image with additional features installed.
+The default configuration is a full-featured environment optimized for AI-assisted development with browser automation capabilities. It uses a custom Dockerfile based on the Microsoft .NET 8 dev container image.
+
+**Included Tools:**
+- .NET 8 SDK
+- Node.js 22
+- Azure CLI
+- GitHub CLI
+- Azure Functions Core Tools v4
+- Azure Developer CLI (azd)
+- TailwindCSS CLI
+- Azure Static Web Apps CLI
+- Azurite (local storage emulator)
+- dotnet-outdated-tool (for checking outdated NuGet packages)
+- Redis server
+
+**Browser Automation Components:**
+- Chromium browser with CDP enabled
+- Xvfb (virtual framebuffer for headless display)
+- Fluxbox window manager
+- x11vnc server for VNC access
+- noVNC for web-based VNC access
+- LibreOffice (Writer, Calc, Impress)
+- PDF utilities (poppler-utils)
+
+**VS Code Extensions:**
+- C# Dev Kit
+- GitHub Actions
+- Azure Functions
+- Azurite
+
+**Forwarded Ports:**
+| Port | Service | Description |
+|------|---------|-------------|
+| 4187 | SWA Emulator | Static Web Apps local development |
+| 5900 | VNC | Direct VNC connection to virtual display |
+| 6080 | noVNC | Web-based VNC viewer (access in browser) |
+| 9222 | CDP | Chrome DevTools Protocol endpoint |
+
+**Environment Variables:**
+- `DISPLAY=:99` - Virtual display
+- `SCREEN_WIDTH=1920` / `SCREEN_HEIGHT=1080` - Screen dimensions
+- `CDP_PORT=9222` - Chrome DevTools Protocol port
+- `VNC_PORT=5900` / `NOVNC_PORT=6080` - VNC ports
+
+**Accessing the Browser:**
+- **noVNC (web)**: Navigate to `http://localhost:6080/vnc.html` in your browser
+- **VNC client**: Connect to `localhost:5900` with any VNC client
+- **CDP**: Use `http://localhost:9222` for Chrome DevTools Protocol connections
+
+**Use this configuration when:**
+- Working with AI agents that need browser automation
+- Using MCP (Model Context Protocol) tools for web interaction
+- Testing web scraping or automated UI testing
+- You need visual access to a browser via VNC
+- PDF processing or document conversion is required
+- Standard development and debugging
+
+### Lightweight Configuration (`.devcontainer/1/devcontainer.json`)
+
+A minimal configuration without browser automation, using the official Microsoft .NET 8 dev container image with devcontainer features. This is archived as an alternative for users who don't need browser capabilities.
 
 **Included Tools:**
 - .NET 8 SDK
@@ -93,55 +158,14 @@ The default configuration is optimized for standard development workflows. It us
 - Azurite
 
 **Use this configuration when:**
-- Building and testing the application locally
-- Standard development and debugging
-- CI/CD pipeline work
 - You don't need browser automation or MCP tools
+- You want a faster container build time
+- You're working in a resource-constrained environment
 
-### Browser MCP Configuration (`.devcontainer/browser/`)
-
-The browser configuration extends the default setup with a full browser automation environment, ideal for AI agents that need to interact with web pages via the Chrome DevTools Protocol (CDP).
-
-**Additional Components:**
-- Chromium browser with CDP enabled
-- Xvfb (virtual framebuffer for headless display)
-- Fluxbox window manager
-- x11vnc server for VNC access
-- noVNC for web-based VNC access
-- Redis server
-- LibreOffice (Writer, Calc, Impress)
-- PDF utilities (poppler-utils)
-
-**Forwarded Ports:**
-| Port | Service | Description |
-|------|---------|-------------|
-| 4187 | SWA Emulator | Static Web Apps local development |
-| 5900 | VNC | Direct VNC connection to virtual display |
-| 6080 | noVNC | Web-based VNC viewer (access in browser) |
-| 9222 | CDP | Chrome DevTools Protocol endpoint |
-
-**Environment Variables:**
-- `DISPLAY=:99` - Virtual display
-- `SCREEN_WIDTH=1920` / `SCREEN_HEIGHT=1080` - Screen dimensions
-- `CDP_PORT=9222` - Chrome DevTools Protocol port
-- `VNC_PORT=5900` / `NOVNC_PORT=6080` - VNC ports
-
-**Use this configuration when:**
-- Working with AI agents that need browser automation
-- Using MCP (Model Context Protocol) tools for web interaction
-- Testing web scraping or automated UI testing
-- You need visual access to a browser via VNC
-- PDF processing or document conversion is required
-
-**Selecting the Browser Configuration:**
+**Selecting the Lightweight Configuration:**
 1. In VS Code, open the Command Palette (Ctrl/Cmd + Shift + P)
 2. Run "Dev Containers: Rebuild and Reopen in Container"
-3. Select "Browser MCP" from the configuration list
-
-**Accessing the Browser:**
-- **noVNC (web)**: Navigate to `http://localhost:6080/vnc.html` in your browser
-- **VNC client**: Connect to `localhost:5900` with any VNC client
-- **CDP**: Use `http://localhost:9222` for Chrome DevTools Protocol connections
+3. Select "C# (.NET)" from the configuration list
 
 ### 2. Set Up Azure Resources
 
@@ -305,6 +329,58 @@ See `tools/README.md` for detailed documentation.
 ### `init-local-settings.sh`
 Automatically creates `api/local.settings.json` with Azurite configuration if it doesn't exist. Runs on container creation.
 
+## Redis Server
+
+Redis is pre-installed in the dev container for local caching during development.
+
+### Starting Redis
+Redis does not start automatically. To start the Redis server:
+```bash
+redis-server --daemonize yes
+```
+
+### Using Redis CLI
+Connect to Redis and run commands:
+```bash
+redis-cli
+```
+
+**Common commands:**
+```bash
+redis-cli ping              # Check if Redis is running (returns PONG)
+redis-cli set mykey "hello" # Set a value
+redis-cli get mykey         # Get a value
+redis-cli keys "*"          # List all keys
+redis-cli flushall          # Clear all data
+```
+
+### Redis in .NET
+Use the `StackExchange.Redis` NuGet package to connect from your C# code:
+```csharp
+var connection = ConnectionMultiplexer.Connect("localhost:6379");
+var db = connection.GetDatabase();
+await db.StringSetAsync("key", "value");
+var value = await db.StringGetAsync("key");
+```
+
+## NuGet Package Management
+
+### Checking for Outdated Packages
+The `dotnet-outdated-tool` is pre-installed to help identify outdated NuGet packages:
+
+```bash
+cd api
+dotnet outdated
+```
+
+**Options:**
+```bash
+dotnet outdated -u           # Automatically update outdated packages
+dotnet outdated -vl minor    # Only show minor version updates
+dotnet outdated -vl major    # Only show major version updates
+dotnet outdated -pre Always  # Include pre-release versions
+```
+
 ## Development Workflow
 
 1. **Make changes** to frontend (HTML/CSS/JS) or backend (.NET API)
@@ -331,7 +407,7 @@ The dashboard (`/app/`) displays user information including:
 ## Storage
 
 ### Local Development
-Uses Azurite with connection string: `UseDevelopmentStorage=true`
+Uses Azurite with connection string configured in `local.settings.json`.
 
 **Azurite Endpoints:**
 - Blob Service: `http://127.0.0.1:10000`
@@ -340,6 +416,76 @@ Uses Azurite with connection string: `UseDevelopmentStorage=true`
 
 ### Production
 Uses Azure Storage Account created by the setup script. Connection string is automatically configured as the `STORAGE` environment variable on the Static Web App.
+
+### Using Azure Table Storage in .NET
+
+Add the NuGet package:
+```bash
+cd api
+dotnet add package Azure.Data.Tables
+```
+
+**Example usage:**
+```csharp
+using Azure.Data.Tables;
+
+// Get connection string from environment
+var connectionString = Environment.GetEnvironmentVariable("STORAGE");
+var tableClient = new TableClient(connectionString, "MyTable");
+
+// Create table if it doesn't exist
+await tableClient.CreateIfNotExistsAsync();
+
+// Add an entity
+var entity = new TableEntity("PartitionKey", "RowKey")
+{
+    { "Name", "John Doe" },
+    { "Email", "john@example.com" }
+};
+await tableClient.AddEntityAsync(entity);
+
+// Query entities
+var results = tableClient.QueryAsync<TableEntity>(e => e.PartitionKey == "PartitionKey");
+await foreach (var item in results)
+{
+    Console.WriteLine(item.GetString("Name"));
+}
+```
+
+### Using Azure Blob Storage in .NET
+
+Add the NuGet package:
+```bash
+cd api
+dotnet add package Azure.Storage.Blobs
+```
+
+**Example usage:**
+```csharp
+using Azure.Storage.Blobs;
+
+// Get connection string from environment
+var connectionString = Environment.GetEnvironmentVariable("STORAGE");
+var blobServiceClient = new BlobServiceClient(connectionString);
+var containerClient = blobServiceClient.GetBlobContainerClient("my-container");
+
+// Create container if it doesn't exist
+await containerClient.CreateIfNotExistsAsync();
+
+// Upload a file
+var blobClient = containerClient.GetBlobClient("my-file.txt");
+await blobClient.UploadAsync(BinaryData.FromString("Hello, World!"), overwrite: true);
+
+// Download a file
+var response = await blobClient.DownloadContentAsync();
+var content = response.Value.Content.ToString();
+
+// List blobs
+await foreach (var blob in containerClient.GetBlobsAsync())
+{
+    Console.WriteLine(blob.Name);
+}
+```
 
 ## Deployment
 
