@@ -1,5 +1,40 @@
 # Copilot Instructions
 
+## ⚠️ CRITICAL: Dev Container Environment
+
+**This project runs inside a VS Code Dev Container.** This has important implications:
+
+### NEVER Use Aggressive Process Killing
+Commands like these **WILL CRASH THE ENTIRE DEV CONTAINER SESSION**:
+```bash
+# ❌ DANGEROUS - DO NOT USE
+pkill -9 -f "func" || true
+pkill -9 -f "swa" || true
+pkill -f "node" || true
+kill -9 $(lsof -t -i:PORT)
+```
+
+These commands are dangerous because:
+- The VS Code Server runs inside the container as a Node.js process
+- `pkill -f "func"` can match unintended processes
+- `pkill -f "swa"` or killing node processes will kill the VS Code Server
+- This disconnects the entire dev container session
+
+### Safe Alternatives
+Instead of aggressive pkill commands:
+1. **Use VS Code Tasks** - Run "swa stop" task which uses controlled process termination
+2. **Use specific PIDs** - If you must kill a process, identify its exact PID first with `ps aux | grep <process>`
+3. **Use graceful shutdown** - Send SIGTERM (not SIGKILL) and only to specific PIDs
+4. **Ctrl+C in terminal** - For foreground processes, use Ctrl+C in their terminal
+
+### If the Container Crashes
+If you accidentally crash the container:
+1. VS Code will show "Reconnecting..." or disconnect
+2. Simply reconnect to the dev container
+3. You may need to restart SWA and other services
+
+---
+
 ## Project Overview
 - **Frontend**: Vanilla JavaScript, HTML, CSS
 - **Backend**: .NET C# API
@@ -123,8 +158,11 @@ STORAGE=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eb
 ### ⚠️ Known Issue: Port Killing Can Crash Dev Container
 When Azurite is not running and SWA CLI attempts to recover, it may try to kill processes on various ports. **This can inadvertently kill the VS Code Server running inside the dev container**, causing the entire container session to disconnect.
 
+**See the "Dev Container Environment" section at the top of this file for critical warnings about process killing.**
+
 **To avoid this:**
 1. Always use the VS Code tasks (not manual terminal commands)
 2. If SWA is behaving unexpectedly, use "swa stop" first, wait a moment, then use "swa start"
-3. If the container disconnects, simply reconnect - but be aware this was likely caused by aggressive port cleanup
+3. **NEVER use `pkill -9 -f "func"` or `pkill -9 -f "swa"`** - these will crash the container
+4. If the container disconnects, simply reconnect - but be aware this was likely caused by aggressive port cleanup
  
