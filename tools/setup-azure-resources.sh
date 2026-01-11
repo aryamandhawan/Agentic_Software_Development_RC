@@ -213,6 +213,11 @@ echo -e "  Static Web App:     ${SWA_NAME}"
 echo -e "  SWA URL:            ${GREEN}https://${SWA_HOSTNAME}${NC}"
 echo -e "  Storage Account:    ${STORAGE_ACCOUNT}"
 
+# Generate recommended password for new Static Web Apps
+if [ "$SWA_EXISTS" = false ]; then
+    RECOMMENDED_PASSWORD="$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-15)!"
+fi
+
 # Save configuration to file
 CONFIG_FILE="tools/.azure-config"
 cat > "$CONFIG_FILE" << EOF
@@ -227,6 +232,11 @@ LOCATION=${LOCATION}
 SWA_HOSTNAME=${SWA_HOSTNAME}
 SWA_API_KEY=${SWA_API_KEY}
 EOF
+
+# Append password to config only if it was generated (new SWA)
+if [ -n "$RECOMMENDED_PASSWORD" ]; then
+    echo "SWA_PASSWORD=${RECOMMENDED_PASSWORD}" >> "$CONFIG_FILE"
+fi
 
 echo -e "\n${GREEN}Configuration saved to: ${CONFIG_FILE}${NC}"
 
@@ -246,8 +256,6 @@ echo -e "\n${GREEN}==================================================${NC}"
 echo -e "${GREEN}Access your Static Web App at:${NC}"
 echo -e "${GREEN}https://${SWA_HOSTNAME}${NC}"
 if [ "$SWA_EXISTS" = false ]; then
-    # Generate a recommended password
-    RECOMMENDED_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
     SWA_RESOURCE_ID="/subscriptions/${SELECTED_SUB_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Web/staticSites/${SWA_NAME}"
     echo -e "\n${YELLOW}To enable password protection, visit:${NC}"
     echo -e "https://portal.azure.com/#@/resource${SWA_RESOURCE_ID}/configurations"
