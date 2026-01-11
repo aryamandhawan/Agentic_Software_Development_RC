@@ -119,6 +119,21 @@ SELECTED_SUB_NAME=${SUB_NAMES[$SUB_CHOICE]}
 az account set --subscription "$SELECTED_SUB_ID"
 echo -e "${GREEN}Using subscription: ${SELECTED_SUB_NAME}${NC}\n"
 
+echo -e "${GREEN}=== Registering Required Resource Providers ===${NC}"
+# New subscriptions may not have these providers registered
+PROVIDERS=("Microsoft.Storage" "Microsoft.Web")
+for PROVIDER in "${PROVIDERS[@]}"; do
+    STATUS=$(az provider show --namespace "$PROVIDER" --query "registrationState" -o tsv 2>/dev/null || echo "NotRegistered")
+    if [ "$STATUS" != "Registered" ]; then
+        echo -e "${YELLOW}Registering ${PROVIDER}...${NC}"
+        az provider register --namespace "$PROVIDER" --wait
+        echo -e "${GREEN}✓ ${PROVIDER} registered${NC}"
+    else
+        echo -e "${GREEN}✓ ${PROVIDER} already registered${NC}"
+    fi
+done
+echo ""
+
 echo -e "${GREEN}=== Creating Resource Group ===${NC}"
 if az group show --name "$RESOURCE_GROUP" &>/dev/null; then
     echo -e "${YELLOW}Resource group '${RESOURCE_GROUP}' already exists${NC}"
@@ -221,9 +236,8 @@ echo -e "\n${GREEN}==================================================${NC}"
 echo -e "${GREEN}Access your Static Web App at:${NC}"
 echo -e "${GREEN}https://${SWA_HOSTNAME}${NC}"
 if [ "$SWA_EXISTS" = false ]; then
-    # Generate a recommended password (with symbol and number)
-    BASE_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-14)
-    RECOMMENDED_PASSWORD="${BASE_PASSWORD}#1"
+    # Generate a recommended password
+    RECOMMENDED_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
     SWA_RESOURCE_ID="/subscriptions/${SELECTED_SUB_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Web/staticSites/${SWA_NAME}"
     echo -e "\n${YELLOW}To enable password protection, visit:${NC}"
     echo -e "https://portal.azure.com/#@/resource${SWA_RESOURCE_ID}/configurations"
