@@ -146,19 +146,29 @@ echo -e "\n${GREEN}=== Creating Storage Account ===${NC}"
 if az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" &>/dev/null; then
     echo -e "${YELLOW}Storage account '${STORAGE_ACCOUNT}' already exists${NC}"
 else
+    echo -e "${YELLOW}Creating storage account '${STORAGE_ACCOUNT}'...${NC}"
     az storage account create \
         --name "$STORAGE_ACCOUNT" \
         --resource-group "$RESOURCE_GROUP" \
         --location "$LOCATION" \
         --sku Standard_LRS \
         --kind StorageV2 \
-        --allow-blob-public-access false \
-        -o none
-    echo -e "${GREEN}✓ Storage account created${NC}"
+        --allow-blob-public-access false
     
-    # Wait for storage account to be fully provisioned
-    echo -e "${YELLOW}Waiting for storage account to be fully provisioned...${NC}"
-    sleep 15
+    # Verify the storage account was created
+    echo -e "${YELLOW}Verifying storage account creation...${NC}"
+    for i in {1..12}; do
+        if az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" &>/dev/null; then
+            echo -e "${GREEN}✓ Storage account created${NC}"
+            break
+        fi
+        if [ $i -eq 12 ]; then
+            echo -e "${RED}Failed to verify storage account creation${NC}"
+            exit 1
+        fi
+        echo -e "${YELLOW}Waiting for storage account to be available (attempt $i/12)...${NC}"
+        sleep 5
+    done
 fi
 
 # Get storage account connection string

@@ -77,8 +77,12 @@ else
     echo -e "${GREEN}✓ Storage account created${NC}"
     
     # Wait for storage account to be fully provisioned
-    echo -e "${YELLOW}Waiting for storage account to be fully provisioned...${NC}"
-    sleep 15
+    echo -ne "${YELLOW}Waiting for storage account to be fully provisioned (15s)... ${NC}"
+    for i in {1..3}; do
+        echo -n "."
+        sleep 5
+    done
+    echo -e " ${GREEN}done${NC}"
 fi
 
 echo -e "\n${GREEN}=== Creating Function App (Flex Consumption) ===${NC}"
@@ -100,8 +104,12 @@ else
     FUNCTION_EXISTS=false
     
     # Wait for function app to be fully provisioned
-    echo -e "${YELLOW}Waiting for Function App to be fully provisioned...${NC}"
-    sleep 20
+    echo -ne "${YELLOW}Waiting for Function App to be fully provisioned (20s)... ${NC}"
+    for i in {1..4}; do
+        echo -n "."
+        sleep 5
+    done
+    echo -e " ${GREEN}done${NC}"
 fi
 
 echo -e "\n${GREEN}=== Enabling System Assigned Managed Identity ===${NC}"
@@ -118,8 +126,12 @@ else
 fi
 
 # Wait for identity to propagate
-echo -e "${YELLOW}Waiting for Managed Identity to propagate...${NC}"
-sleep 30
+echo -ne "${YELLOW}Waiting for Managed Identity to propagate (30s)... ${NC}"
+for i in {1..6}; do
+    echo -n "."
+    sleep 5
+done
+echo -e " ${GREEN}done${NC}"
 
 echo -e "\n${GREEN}=== Configuring Storage Account Access via Managed Identity ===${NC}"
 
