@@ -1,5 +1,5 @@
 # Combined dev container with .NET, Node.js, and Browser (VNC + CDP)
-FROM mcr.microsoft.com/devcontainers/dotnet:1-8.0
+FROM mcr.microsoft.com/devcontainers/dotnet:1-9.0
 
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
@@ -21,20 +21,34 @@ RUN npm install -g azure-functions-core-tools@4 --unsafe-perm true
 # Install Redis server
 RUN apt-get install -y redis-server
 
+# Install dos2unix for line ending conversion (safety measure for Windows users)
+RUN apt-get install -y dos2unix
+
 # Install poppler-utils for PDF text extraction (pdftotext, pdfinfo, pdfimages)
 RUN apt-get install -y poppler-utils
 
 # Install jq for JSON processing (useful for Azure CLI and API responses)
 RUN apt-get install -y jq
 
-# Install TailwindCSS standalone CLI
-RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
-    && chmod +x tailwindcss-linux-x64 \
-    && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
+# Install TailwindCSS standalone CLI (architecture-aware)
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "arm64" ]; then \
+        curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64; \
+        chmod +x tailwindcss-linux-arm64; \
+        mv tailwindcss-linux-arm64 /usr/local/bin/tailwindcss; \
+    else \
+        curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64; \
+        chmod +x tailwindcss-linux-x64; \
+        mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss; \
+    fi
 
-# Install global npm packages and .NET tools
-RUN npm install -g @azure/static-web-apps-cli azurite \
-    && dotnet tool install --global dotnet-outdated-tool
+# Install global npm packages
+RUN npm install -g @azure/static-web-apps-cli azurite
+
+# Install .NET tools for vscode user
+USER vscode
+RUN dotnet tool install --global dotnet-outdated-tool
+USER root
 
 # ============================================
 # Browser packages (Chromium, VNC, noVNC, CDP)
