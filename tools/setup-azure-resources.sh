@@ -5,6 +5,9 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -219,7 +222,7 @@ if [ "$SWA_EXISTS" = false ]; then
 fi
 
 # Save configuration to file
-CONFIG_FILE="tools/.azure-config"
+CONFIG_FILE="${SCRIPT_DIR}/.azure-config"
 cat > "$CONFIG_FILE" << EOF
 # Azure Resource Configuration
 # Generated: $(date)

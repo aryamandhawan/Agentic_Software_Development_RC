@@ -89,7 +89,8 @@ If you accidentally crash the container:
 **CAUTION: Do NOT implement custom security or authentication mechanisms.**
 
 Azure Static Web Apps provides built-in authentication via `/.auth/` endpoints. Always use this instead of rolling your own:
-- Login: `/.auth/login/aad` (Azure AD)
+- Login (Production): `/.auth/login/aad` (Azure AD)
+- Login (Local Development): `/.auth/login/aad` (Mock authentication server provided by SWA CLI)
 - User info: `/.auth/me`
 - Logout: `/.auth/logout`
 
@@ -111,6 +112,35 @@ The `staticwebapp.config.json` file controls route-level authentication requirem
 - Follow Azure Static Web Apps best practices
 - Consider Table Storage query patterns for performance
 
+## 🧪 Testing with Chrome DevTools MCP
+
+**Chrome DevTools MCP is available and is the primary way to test what you build.**
+
+This MCP provides full browser automation capabilities for testing the application:
+- Navigate to pages and interact with UI elements
+- Take snapshots to see page content and element structure
+- Click buttons, fill forms, and verify functionality
+- Inspect network requests and console messages
+- Test the full user experience end-to-end
+
+### When to Use Chrome DevTools MCP
+- **After making frontend changes** - Verify the UI renders correctly
+- **After making API changes** - Test the full flow through the browser
+- **When debugging issues** - Inspect console errors, network requests, and page state
+- **For integration testing** - Verify frontend and backend work together
+
+### Testing Workflow
+1. Ensure SWA is running (use "swa start" task)
+2. Navigate to `http://localhost:4280` for full app testing (includes auth)
+3. Use `take_snapshot` to see page structure and available elements
+4. Interact with elements using `click`, `fill`, etc.
+5. Check `list_console_messages` and `list_network_requests` for debugging
+
+### Direct API Testing (Without Auth)
+For testing APIs without authentication overhead, call Azure Functions directly at `http://localhost:7071/api/...` using `curl` or the browser via Chrome MCP.
+
+---
+
 ## Key Reminders
 1. This is vanilla JavaScript - no React, Vue, or other frameworks
 2. Always use relative URLs for API calls in JavaScript code (e.g., `/api/users` not `https://domain.com/api/users`) - SWA proxies these to Functions
@@ -123,7 +153,7 @@ The `staticwebapp.config.json` file controls route-level authentication requirem
 9. Never commit secrets, connection strings, or the `tools/.azure-config` file to git
 10. All API endpoints should be authenticated by default unless explicitly made public
 11. Use camelCase for JSON properties sent to the frontend (JavaScript convention)
-12. **Testing APIs locally**: Call the Azure Functions URL directly (`http://localhost:7071/api/...`), NOT through the SWA server (`http://localhost:4280/api/...`) which requires authentication. Use terminal tools like `curl`, or if Chrome MCP is available, test through the browser
+12. **Always test your changes** - Use Chrome DevTools MCP to verify functionality after making changes
 
 ---
 
