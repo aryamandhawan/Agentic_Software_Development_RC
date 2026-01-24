@@ -16,8 +16,14 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}=== Azure Function App Setup (Flex Consumption) ===${NC}\n"
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Get the project root (parent of tools directory)
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 # Load existing configuration if available
-CONFIG_FILE="tools/.azure-config"
+CONFIG_FILE="${SCRIPT_DIR}/.azure-config"
 if [ -f "$CONFIG_FILE" ]; then
     source "$CONFIG_FILE"
     echo -e "${GREEN}Loaded existing configuration from ${CONFIG_FILE}${NC}"
@@ -359,7 +365,7 @@ echo -e "\n${GREEN}Configuration updated in: ${CONFIG_FILE}${NC}"
 # Switch workflow files to BYO (Bring Your Own) Functions approach
 echo -e "\n${GREEN}=== Configuring GitHub Actions Workflows ===${NC}"
 
-WORKFLOWS_DIR=".github/workflows"
+WORKFLOWS_DIR="${PROJECT_ROOT}/.github/workflows"
 COMBINED_WORKFLOW="${WORKFLOWS_DIR}/azure-static-web-apps.yml"
 FRONTEND_WORKFLOW="${WORKFLOWS_DIR}/azure-static-web-apps-frontend.yml"
 API_WORKFLOW="${WORKFLOWS_DIR}/azure-functions-byo.yml"
@@ -399,8 +405,8 @@ if [ -f "$API_WORKFLOW" ]; then
 fi
 
 # GitHub Secret Setup Instructions
-if git remote get-url origin &> /dev/null; then
-    REPO_PATH=$(git remote get-url origin | sed 's/.*github\.com[:/]\(.*\)\(\.git\)\?$/\1/' | sed 's/\.git$//')
+if git -C "$PROJECT_ROOT" remote get-url origin &> /dev/null; then
+    REPO_PATH=$(git -C "$PROJECT_ROOT" remote get-url origin | sed 's/.*github\.com[:/]\(.*\)\(\.git\)\?$/\1/' | sed 's/\.git$//')
     
     echo -e "\n${GREEN}=== GitHub Secret Setup Required ===${NC}"
     echo -e "${YELLOW}IMPORTANT: Add this secret to GitHub before deploying:${NC}\n"
@@ -421,7 +427,7 @@ SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
 # Check for uncommitted changes
 echo -e "\n${GREEN}=== Checking Git Status ===${NC}"
-if git diff --quiet .github/workflows/ && git diff --cached --quiet .github/workflows/; then
+if git -C "$PROJECT_ROOT" diff --quiet .github/workflows/ && git -C "$PROJECT_ROOT" diff --cached --quiet .github/workflows/; then
     echo -e "${GREEN}✓ Workflow files are committed${NC}"
     WORKFLOWS_COMMITTED=true
 else
@@ -430,16 +436,16 @@ else
     WORKFLOWS_COMMITTED=false
     
     echo -e "${YELLOW}Files changed:${NC}"
-    git status --short .github/workflows/
+    git -C "$PROJECT_ROOT" status --short .github/workflows/
     echo ""
     
     read -p "Do you want to commit and push the workflow changes now? (y/n): " COMMIT_NOW
     if [[ $COMMIT_NOW =~ ^[Yy]$ ]]; then
-        git add .github/workflows/
-        git commit -m "Switch to BYO Functions: Enable separate API and frontend workflows"
+        git -C "$PROJECT_ROOT" add .github/workflows/
+        git -C "$PROJECT_ROOT" commit -m "Switch to BYO Functions: Enable separate API and frontend workflows"
         
         echo -e "${YELLOW}Pushing to GitHub...${NC}"
-        if git push; then
+        if git -C "$PROJECT_ROOT" push; then
             echo -e "${GREEN}✓ Workflows committed and pushed to GitHub${NC}"
             WORKFLOWS_COMMITTED=true
             sleep 5  # Give GitHub a moment to register the workflows
@@ -470,7 +476,7 @@ else
         # Check if gh CLI is available
         if command -v gh &> /dev/null; then
             echo -e "${YELLOW}Triggering frontend workflow...${NC}"
-            gh workflow run azure-static-web-apps-frontend.yml 2>/dev/null && \
+            gh workflow run azure-static-web-apps-frontend.yml --repo "${REPO_PATH}" 2>/dev/null && \
                 echo -e "${GREEN}✓ Frontend workflow triggered successfully${NC}" || \
                 echo -e "${RED}Failed to trigger workflow. You may need to authenticate with: gh auth login${NC}"
         else
