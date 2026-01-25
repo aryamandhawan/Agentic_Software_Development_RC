@@ -72,8 +72,7 @@
       "type": "shell",
       "command": "swa",
       "args": [
-        "start",
-        "agentic-software-development"
+        "start"
       ],
       "isBackground": true,
       "problemMatcher": {
