@@ -60,6 +60,7 @@ If you accidentally crash the container:
 - Fetch API for HTTP requests
 - Always use relative URLs for API calls (e.g., `/api/users` not `https://domain.com/api/users`)
 - Implement both client-side and server-side validation
+- **Never use `alert()`, `confirm()`, or `prompt()`** - Use custom modal dialogs instead for better UX and consistent styling
 
 ### Backend (C#)
 - Use async/await patterns
