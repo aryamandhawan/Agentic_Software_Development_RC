@@ -100,7 +100,7 @@
     {
       "label": "swa stop",
       "type": "shell",
-      "command": "pkill -f 'swa start' || true",
+      "command": "pkill -TERM -f '^swa start$' || pkill -TERM -f 'swa-cli.*start' || true",
       "problemMatcher": [],
       "options": {
         "cwd": "${workspaceFolder}"

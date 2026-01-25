@@ -37,11 +37,15 @@ If you accidentally crash the container:
 
 ## Project Overview
 - **Frontend**: Vanilla JavaScript, HTML, CSS
-- **Backend**: .NET C# API
+- **Backend**: .NET 9 C# API (Azure Functions isolated worker)
 - **Database**: Azure Table Storage and Blob Storage (no SQL)
 - **Caching**: Managed Redis on Azure (with core classes for implementation)
 - **Hosting**: Azure Static Web Apps
 - **Architecture**: No view framework (React, Vue, etc.)
+
+### Frontend File Structure
+- **Root (`/`)** - Anonymous/public pages (e.g., `index.html`, landing pages)
+- **`/app/`** - Authenticated pages (protected by `staticwebapp.config.json`)
 
 ## Code Style Preferences
 
@@ -94,7 +98,19 @@ Azure Static Web Apps provides built-in authentication via `/.auth/` endpoints. 
 - User info: `/.auth/me`
 - Logout: `/.auth/logout`
 
-The `staticwebapp.config.json` file controls route-level authentication requirements.
+The `staticwebapp.config.json` file controls route-level authentication requirements:
+```json
+{
+  "routes": [
+    { "route": "/app/*", "allowedRoles": ["authenticated"] },
+    { "route": "/api/*", "allowedRoles": ["authenticated"] }
+  ],
+  "responseOverrides": {
+    "401": { "redirect": "/.auth/login/aad", "statusCode": 302 }
+  }
+}
+```
+This protects `/app/*` and `/api/*` routes, redirecting unauthenticated users to login.
 
 **If you absolutely must implement custom authentication logic:**
 - **DO NOT use the `Authorization` header** - Azure Static Web Apps does not support custom Authorization headers on API requests. The platform strips or ignores them.
@@ -164,13 +180,31 @@ For testing APIs without authentication overhead, call Azure Functions directly 
 
 Instead, use the VS Code tasks:
 - **"swa start"** - Starts SWA CLI and Azurite together
-- **"swa stop"** - Stops SWA CLI gracefully
+- **"swa stop"** - Stops SWA CLI gracefully (uses SIGTERM, not SIGKILL)
 - **"swa restart"** - Stops then starts SWA
 
 These tasks are configured to properly manage Azurite alongside SWA.
 
+### ⚠️⚠️⚠️ ALWAYS Restart SWA After ANY Backend Changes ⚠️⚠️⚠️
+
+**THIS IS THE #1 MISSED STEP. Whenever you make ANY changes to the backend C# code (in the `api/` folder), you MUST restart SWA using the "swa restart" task.**
+
+- The SWA restart process **automatically builds the .NET project** - you do NOT need to run a separate build task
+- Without restarting, your backend changes will NOT be reflected
+- This applies to: new endpoints, modified logic, configuration changes, new files, etc.
+
+**Workflow after backend changes:**
+1. Save your C# files
+2. Run the "swa restart" task (this builds AND restarts)
+3. Test your changes
+
+**If you skip this step, you will be testing stale code!**
+
 ### Azurite Configuration
-Azurite is configured in `swa-cli.config.json` to run automatically when SWA starts:
+Azurite is started automatically by SWA CLI (configured in `swa-cli.config.json`).
+
+Azurite data files are stored in the `.azurite/` folder (gitignored).
+
 ```
 "run": "azurite --silent --location .azurite --debug .azurite/debug.log"
 ```
