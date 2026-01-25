@@ -6,5 +6,6 @@
     "azureFunctions.preDeployTask": "publish (functions)",
     "azurite.location": ".azurite",
     "chat.agent.maxRequests": 100,
-    "github.copilot.chat.mcp.servers": {}
+    "github.copilot.chat.mcp.servers": {},
+    "sarif-viewer.connectToGithubCodeScanning": "off"
 }
