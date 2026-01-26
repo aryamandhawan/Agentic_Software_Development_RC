@@ -74,6 +74,7 @@
       "args": [
         "start"
       ],
+      "dependsOn": "swa stop",
       "isBackground": true,
       "problemMatcher": {
         "owner": "swa",
