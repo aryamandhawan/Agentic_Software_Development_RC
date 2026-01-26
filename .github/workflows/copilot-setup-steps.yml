@@ -118,6 +118,14 @@ jobs:
         run: mkdir -p .azurite
 
       # ============================================
+      # Append agent-specific instructions
+      # ============================================
+      - name: Append agent-specific instructions
+        run: |
+          echo "" >> .github/copilot-instructions.md
+          cat .github/copilot-agent-instructions.md >> .github/copilot-instructions.md
+
+      # ============================================
       # Verify installations
       # ============================================
       - name: Verify tool installations
