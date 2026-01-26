@@ -186,6 +186,18 @@ Instead, use the VS Code tasks:
 
 These tasks are configured to properly manage Azurite alongside SWA.
 
+### ⚠️ Task Terminal Output May Not Be Accessible
+When running VS Code tasks, you may receive "Terminal not found" or similar messages when trying to read task output. **This does NOT mean the task failed to start.**
+
+**CRITICAL: Do NOT start tasks multiple times just because terminal output isn't accessible.**
+
+Before starting SWA, always check if it's already running:
+```bash
+pgrep -af "swa start"
+```
+
+If a PID is returned, SWA is already running - do not start it again.
+
 ### ⚠️⚠️⚠️ ALWAYS Restart SWA After ANY Backend Changes ⚠️⚠️⚠️
 
 **THIS IS THE #1 MISSED STEP. Whenever you make ANY changes to the backend C# code (in the `api/` folder), you MUST restart SWA using the "swa restart" task.**
