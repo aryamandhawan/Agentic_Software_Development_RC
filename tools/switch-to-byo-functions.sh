@@ -101,7 +101,7 @@ else
         --resource-group "$RESOURCE_GROUP" \
         --storage-account "$FUNCTION_STORAGE_ACCOUNT" \
         --runtime dotnet-isolated \
-        --runtime-version 8 \
+        --runtime-version 10 \
         --functions-version 4 \
         --flexconsumption-location "$LOCATION" \
         -o none
