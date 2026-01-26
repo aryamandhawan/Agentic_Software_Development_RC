@@ -1,5 +1,5 @@
 # Combined dev container with .NET, Node.js, and Browser (VNC + CDP)
-FROM mcr.microsoft.com/devcontainers/dotnet:1-9.0
+FROM mcr.microsoft.com/devcontainers/dotnet:10.0
 
 # Remove Yarn repository with expired GPG key (causes apt-get update to fail)
 RUN rm -f /etc/apt/sources.list.d/yarn.list

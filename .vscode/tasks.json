@@ -101,7 +101,7 @@
     {
       "label": "swa stop",
       "type": "shell",
-      "command": "pkill -TERM -f '^swa start$' || pkill -TERM -f 'swa-cli.*start' || true",
+      "command": "pkill -TERM -f 'node.*swa.*start' || pkill -TERM -f '@azure/static-web-apps-cli' || true; sleep 1",
       "problemMatcher": [],
       "options": {
         "cwd": "${workspaceFolder}"

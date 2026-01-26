@@ -37,7 +37,7 @@ If you accidentally crash the container:
 
 ## Project Overview
 - **Frontend**: Vanilla JavaScript, HTML, CSS
-- **Backend**: .NET 9 C# API (Azure Functions isolated worker)
+- **Backend**: .NET 10 C# API (Azure Functions isolated worker)
 - **Database**: Azure Table Storage and Blob Storage (no SQL)
 - **Caching**: Managed Redis on Azure (with core classes for implementation)
 - **Hosting**: Azure Static Web Apps
