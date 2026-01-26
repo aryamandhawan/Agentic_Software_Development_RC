@@ -1,0 +1,133 @@
+# Copilot Coding Agent Setup Steps
+# This workflow configures the development environment for GitHub Copilot coding agent.
+# It mirrors the dev container setup to ensure the agent has access to all necessary tools.
+#
+# For more information, see:
+# https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment
+
+name: "Copilot Setup Steps"
+
+# This workflow is automatically invoked by the Copilot coding agent before it starts working.
+# The workflow_dispatch trigger allows manual testing via the Actions tab if needed.
+on:
+  workflow_dispatch:
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Set the permissions to the lowest permissions possible needed for your steps.
+    # Copilot will be given its own token for its operations.
+    permissions:
+      contents: read
+
+    # Environment variables matching the dev container and local development setup
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: true
+      # Azurite connection string for local storage emulation
+      STORAGE: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;"
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ============================================
+      # .NET 9.0 SDK Setup
+      # ============================================
+      - name: Setup .NET 9.0 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      # ============================================
+      # Node.js 22 Setup (matching dev container)
+      # ============================================
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # ============================================
+      # Install Azure Functions Core Tools v4
+      # ============================================
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
+      # ============================================
+      # Install Azure Static Web Apps CLI
+      # ============================================
+      - name: Install SWA CLI
+        run: npm install -g @azure/static-web-apps-cli
+
+      # ============================================
+      # Install Azurite (Azure Storage Emulator)
+      # ============================================
+      - name: Install Azurite
+        run: npm install -g azurite
+
+      # ============================================
+      # Install TailwindCSS CLI (standalone)
+      # ============================================
+      - name: Install TailwindCSS CLI
+        run: |
+          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
+          chmod +x tailwindcss-linux-x64
+          sudo mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
+
+      # ============================================
+      # Install .NET Tools (dotnet-outdated)
+      # ============================================
+      - name: Install .NET Tools
+        run: dotnet tool install --global dotnet-outdated-tool
+
+      # ============================================
+      # Restore and Build .NET API
+      # ============================================
+      - name: Restore .NET dependencies
+        run: dotnet restore
+        working-directory: ./api
+
+      - name: Build .NET API
+        run: dotnet build --no-restore
+        working-directory: ./api
+
+      # ============================================
+      # Create local.settings.json for Azure Functions
+      # ============================================
+      - name: Create local.settings.json
+        run: |
+          cat > ./api/local.settings.json << 'EOF'
+          {
+            "IsEncrypted": false,
+            "Values": {
+              "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+              "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+              "STORAGE": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;"
+            }
+          }
+          EOF
+
+      # ============================================
+      # Create Azurite data directory
+      # ============================================
+      - name: Create Azurite data directory
+        run: mkdir -p .azurite
+
+      # ============================================
+      # Verify installations
+      # ============================================
+      - name: Verify tool installations
+        run: |
+          echo "=== Tool Versions ==="
+          echo "Node.js: $(node --version)"
+          echo "npm: $(npm --version)"
+          echo ".NET SDK: $(dotnet --version)"
+          echo "Azure Functions Core Tools: $(func --version)"
+          echo "SWA CLI: $(swa --version)"
+          echo "TailwindCSS: $(tailwindcss --help | head -1)"
+          echo "dotnet-outdated: $(dotnet outdated --version)"
+          echo "=== Verification Complete ==="
