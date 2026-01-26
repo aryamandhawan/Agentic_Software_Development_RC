@@ -7,12 +7,14 @@ on:
     branches: [ "main" ]
     paths:
       - 'app/**'
+      - 'vendor/**'
       - 'index.html'
       - 'staticwebapp.config.json'
       - '.github/workflows/azure-static-web-apps-frontend.yml'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [ "main" ]
+  workflow_dispatch:
 
 # Environment variables available to all jobs and steps in this workflow
 env:
