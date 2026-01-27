@@ -1,5 +1,20 @@
 # Copilot Instructions
 
+## 📋 Quick Reference
+
+| Task | Command/Action |
+|------|----------------|
+| Start SWA | Run VS Code task: **"swa start"** |
+| Stop SWA | Run VS Code task: **"swa stop"** |
+| Restart SWA (after backend changes) | Run VS Code task: **"swa restart"** |
+| Check if SWA is running | `pgrep -af "swa start"` |
+| Full app URL (with auth) | `http://localhost:4280` |
+| Direct Functions URL (no auth) | `http://localhost:7071/api/...` |
+| Storage connection variable | `STORAGE` (not `AzureWebJobsStorage`) |
+| **Start Azurite** | **❌ NEVER - SWA starts it automatically** |
+
+---
+
 ## ⚠️ CRITICAL: Dev Container Environment
 
 **This project runs inside a VS Code Dev Container.** This has important implications:
@@ -106,12 +121,16 @@ The `staticwebapp.config.json` file controls route-level authentication requirem
     { "route": "/app/*", "allowedRoles": ["authenticated"] },
     { "route": "/api/*", "allowedRoles": ["authenticated"] }
   ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "/.auth/*", "/assets/*"]
+  },
   "responseOverrides": {
     "401": { "redirect": "/.auth/login/aad", "statusCode": 302 }
   }
 }
 ```
-This protects `/app/*` and `/api/*` routes, redirecting unauthenticated users to login.
+This protects `/app/*` and `/api/*` routes, redirecting unauthenticated users to login. The `navigationFallback` ensures SPA routing works correctly.
 
 **If you absolutely must implement custom authentication logic:**
 - **DO NOT use the `Authorization` header** - Azure Static Web Apps does not support custom Authorization headers on API requests. The platform strips or ignores them.
@@ -153,8 +172,14 @@ This MCP provides full browser automation capabilities for testing the applicati
 4. Interact with elements using `click`, `fill`, etc.
 5. Check `list_console_messages` and `list_network_requests` for debugging
 
-### Direct API Testing (Without Auth)
-For testing APIs without authentication overhead, call Azure Functions directly at `http://localhost:7071/api/...` using `curl` or the browser via Chrome MCP.
+### Direct API Testing (Bypasses Auth)
+For rapid API development, you can call Azure Functions directly at `http://localhost:7071/api/...` using `curl` or the browser.
+
+⚠️ **Important**: This bypasses SWA's authentication layer entirely. The Functions runtime runs independently and does not enforce the auth rules defined in `staticwebapp.config.json`. This is useful for:
+- Testing API logic without auth overhead
+- Debugging backend issues in isolation
+
+However, always test through `http://localhost:4280` (SWA) before considering a feature complete, to verify the full auth flow works correctly.
 
 ---
 
@@ -175,6 +200,23 @@ For testing APIs without authentication overhead, call Azure Functions directly 
 ---
 
 ## ⚠️ CRITICAL: Local Development with SWA CLI and Azurite
+
+### 🚫 NEVER Start Azurite Manually
+**Azurite is started AUTOMATICALLY by SWA CLI.** The `swa-cli.config.json` file includes a `run` command that launches Azurite.
+
+```
+❌ WRONG - Do NOT run these commands:
+azurite
+azurite --silent
+npm run azurite
+```
+
+```
+✅ CORRECT - Just run the VS Code task:
+"swa start" task (this starts BOTH SWA and Azurite)
+```
+
+If you start Azurite manually, you will have **two instances** trying to use the same ports, causing conflicts and loops.
 
 ### ALWAYS Use VS Code Tasks for SWA
 **NEVER run `swa start`, `swa stop`, or Azurite commands directly in the terminal.**
@@ -213,21 +255,25 @@ If a PID is returned, SWA is already running - do not start it again.
 
 **If you skip this step, you will be testing stale code!**
 
-### Azurite Configuration
-Azurite is started automatically by SWA CLI (configured in `swa-cli.config.json`).
+### Azurite Configuration (Automatic - Do Not Start Manually)
+Azurite is the local Azure Storage emulator. **It is started automatically by SWA CLI** via the `run` property in `swa-cli.config.json`. You do NOT need to start it yourself.
 
-Azurite data files are stored in the `.azurite/` folder (gitignored).
+| Setting | Value |
+|---------|-------|
+| Data folder | `.azurite/` (gitignored) |
+| Debug log | `.azurite/debug.log` |
+| Blob endpoint | `http://127.0.0.1:10000/devstoreaccount1` |
+| Queue endpoint | `http://127.0.0.1:10001/devstoreaccount1` |
+| Table endpoint | `http://127.0.0.1:10002/devstoreaccount1` |
 
-```
+**SWA CLI runs Azurite via `swa-cli.config.json`:**
+```json
 "run": "azurite --silent --location .azurite --debug .azurite/debug.log"
 ```
 
-**Local Azurite Endpoints:**
-- Blob Storage: `http://127.0.0.1:10000/devstoreaccount1`
-- Queue Storage: `http://127.0.0.1:10001/devstoreaccount1`
-- Table Storage: `http://127.0.0.1:10002/devstoreaccount1`
+⚠️ **If Azurite ports are already in use**, it means SWA is already running. Check with `pgrep -af "swa start"` before trying to start again.
 
-**Connection String (in `local.settings.json`):**
+**Connection String** (already configured in `local.settings.json`):
 ```
 STORAGE=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;
 ```
