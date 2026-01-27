@@ -74,20 +74,8 @@
       "args": [
         "start"
       ],
-      "dependsOn": "swa stop",
       "isBackground": true,
-      "problemMatcher": {
-        "owner": "swa",
-        "pattern": {
-          "regexp": "^(.*)$",
-          "message": 1
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "^.*Azure Static Web Apps.*$",
-          "endsPattern": "^.*Azure Static Web Apps emulator started.*$"
-        }
-      },
+      "problemMatcher": [],
       "options": {
         "cwd": "${workspaceFolder}"
       },
