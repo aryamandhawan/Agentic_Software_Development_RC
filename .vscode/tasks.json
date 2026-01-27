@@ -110,18 +110,6 @@
         "reveal": "silent",
         "close": true
       }
-    },
-    {
-      "label": "swa restart",
-      "type": "shell",
-      "command": "echo 'Restarting SWA...'",
-      "dependsOn": ["swa stop", "swa start"],
-      "dependsOrder": "sequence",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "silent",
-        "close": true
-      }
     }
   ]
 }

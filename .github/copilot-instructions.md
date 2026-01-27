@@ -4,9 +4,8 @@
 
 | Task | Command/Action |
 |------|----------------|
-| Start SWA | Run VS Code task: **"swa start"** |
+| Start/Restart SWA | Run VS Code task: **"swa start"** (automatically stops first if running) |
 | Stop SWA | Run VS Code task: **"swa stop"** |
-| Restart SWA (after backend changes) | Run VS Code task: **"swa restart"** |
 | Check if SWA is running | `pgrep -af "swa start"` |
 | Full app URL (with auth) | `http://localhost:4280` |
 | Direct Functions URL (no auth) | `http://localhost:7071/api/...` |
@@ -222,9 +221,8 @@ If you start Azurite manually, you will have **two instances** trying to use the
 **NEVER run `swa start`, `swa stop`, or Azurite commands directly in the terminal.**
 
 Instead, use the VS Code tasks:
-- **"swa start"** - Starts SWA CLI and Azurite together
+- **"swa start"** - Stops any running instance first, then starts SWA CLI and Azurite together (use this for both starting and restarting)
 - **"swa stop"** - Stops SWA CLI gracefully (uses SIGTERM, not SIGKILL)
-- **"swa restart"** - Stops then starts SWA
 
 These tasks are configured to properly manage Azurite alongside SWA.
 
@@ -242,15 +240,16 @@ If a PID is returned, SWA is already running - do not start it again.
 
 ### ⚠️⚠️⚠️ ALWAYS Restart SWA After ANY Backend Changes ⚠️⚠️⚠️
 
-**THIS IS THE #1 MISSED STEP. Whenever you make ANY changes to the backend C# code (in the `api/` folder), you MUST restart SWA using the "swa restart" task.**
+**THIS IS THE #1 MISSED STEP. Whenever you make ANY changes to the backend C# code (in the `api/` folder), you MUST restart SWA by running the "swa start" task.**
 
-- The SWA restart process **automatically builds the .NET project** - you do NOT need to run a separate build task
+- The "swa start" task **automatically stops any running instance first**, then rebuilds and starts fresh
+- The restart process **automatically builds the .NET project** - you do NOT need to run a separate build task
 - Without restarting, your backend changes will NOT be reflected
 - This applies to: new endpoints, modified logic, configuration changes, new files, etc.
 
 **Workflow after backend changes:**
 1. Save your C# files
-2. Run the "swa restart" task (this builds AND restarts)
+2. Run the "swa start" task (this stops, builds, AND restarts)
 3. Test your changes
 
 **If you skip this step, you will be testing stale code!**
