@@ -31,27 +31,3 @@ Then navigate to `/app/` — the SWA CLI will recognize the session as authentic
 AUTH_COOKIE=$(echo -n '{"identityProvider":"aad","userId":"test-user-id","userDetails":"test@example.com","userRoles":["anonymous","authenticated"],"claims":[]}' | base64 -w0)
 curl -b "StaticWebAppsAuthCookie=$AUTH_COOKIE" http://localhost:4280/app/
 ```
-
----
-
-## 🚀 Starting Services
-
-To start the full development environment:
-
-```bash
-# Start Azurite in background
-azurite --silent --location .azurite --debug .azurite/debug.log &
-
-# Start SWA CLI (this also starts Azure Functions)
-swa start
-```
-
-The SWA emulator will be available at `http://localhost:4280`.
-
----
-
-## 🧪 Testing Approach
-
-1. **API-only testing**: Call `http://localhost:7071/api/...` directly (no auth required)
-2. **Full app testing**: Use programmatic auth (above), then navigate to `http://localhost:4280/app/`
-3. **Always verify**: After backend changes, restart SWA to pick up the new code
