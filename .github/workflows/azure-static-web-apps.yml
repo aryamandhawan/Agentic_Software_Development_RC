@@ -44,11 +44,11 @@ jobs:
           submodules: true
 
       # Pre-build the .NET API to bypass Oryx's version detection
-      # Oryx doesn't support .NET 10 yet, so we build it ourselves
+      # Oryx doesn't support .NET 9 yet, so we build it ourselves
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Build API
         run: dotnet publish --configuration Release --output ../api-output

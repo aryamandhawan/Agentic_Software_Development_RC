@@ -13,7 +13,7 @@ on:
 env:
   AZURE_FUNCTIONAPP_NAME: 'YOUR_FUNCTION_APP_NAME' # Will be updated by switch-to-byo-function.sh
   AZURE_FUNCTIONAPP_PACKAGE_PATH: 'api'
-  DOTNET_VERSION: '10.0.x'
+  DOTNET_VERSION: '9.0.x'
   AZURE_RESOURCE_GROUP: 'YOUR_RESOURCE_GROUP' # Will be updated by switch-to-byo-function.sh
 
 permissions:

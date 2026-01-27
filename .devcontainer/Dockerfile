@@ -1,15 +1,14 @@
 # Combined dev container with .NET, Node.js, and Browser (VNC + CDP)
-# Using Debian bookworm base with .NET 10 SDK installed manually
-# (dotnet:10.0-bookworm devcontainer image not yet available on MCR)
+# Using Debian bookworm base with .NET 9 SDK installed manually
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
 # Remove Yarn apt repository (has expired GPG key in base image, causing apt-get update to fail)
 RUN rm -f /etc/apt/sources.list.d/yarn.list
 
-# Install .NET 10 SDK
+# Install .NET 9 SDK
 RUN wget https://dot.net/v1/dotnet-install.sh -O /tmp/dotnet-install.sh \
     && chmod +x /tmp/dotnet-install.sh \
-    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 9.0 --install-dir /usr/share/dotnet \
     && ln -s /usr/share/dotnet/dotnet /usr/local/bin/dotnet \
     && rm /tmp/dotnet-install.sh
 
